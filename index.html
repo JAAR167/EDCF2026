@@ -723,109 +723,94 @@
             showModal('transactionModal');
         }
 
-        async function saveTransaction() {
-            const tipo = document.getElementById('txTipo').value;
-            const monto = document.getElementById('txMonto').value;
-            const concepto = document.getElementById('txConcepto').value;
-            const fecha = document.getElementById('txFecha').value;
-            const visible = document.getElementById('txVisible').checked;
+       async function saveTransaction() {
+    const tipo = document.getElementById('txTipo').value;
+    const monto = document.getElementById('txMonto').value;
+    const concepto = document.getElementById('txConcepto').value;
+    const fecha = document.getElementById('txFecha').value;
+    const visible = document.getElementById('txVisible').checked;
 
-            if (!monto || !concepto || !fecha) {
-                alert('Por favor completa todos los campos');
-                return;
-            }
+    if (!monto || !concepto || !fecha) {
+        alert('Por favor completa todos los campos');
+        return;
+    }
 
-            const data = {
-                action: editingId ? 'edit' : 'add',
-                id: editingId,
-                tipo,
-                monto: parseFloat(monto),
-                concepto,
-                fecha,
-                visible
-            };
+    let params = new URLSearchParams();
+    params.append('action', editingId ? 'edit' : 'add');
+    if (editingId) params.append('id', editingId);
+    params.append('tipo', tipo);
+    params.append('monto', monto);
+    params.append('concepto', concepto);
+    params.append('fecha', fecha);
+    params.append('visible', visible);
 
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params.toString()
+        });
 
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
+        if (!response.ok) throw new Error('Error del servidor');
 
-                const result = await response.json();
-                if (!result.success) {
-                    throw new Error('Error al procesar la transacción');
-                }
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message || 'Error desconocido');
 
-                hideModal('transactionModal');
-                await loadTransactions();
-            } catch (error) {
-                console.error('Error al guardar:', error);
-                alert('Error al guardar la transacción: ' + error.message);
-            }
-        }
+        hideModal('transactionModal');
+        await loadTransactions();
+    } catch (error) {
+        console.error('Error al guardar:', error);
+        alert('Error al guardar: ' + error.message);
+    }
+}
 
         // Eliminar transacción
-        async function deleteTransaction(id) {
-            if (!confirm('¿Estás seguro de eliminar esta transacción?')) return;
+       async function deleteTransaction(id) {
+    if (!confirm('¿Estás seguro de eliminar esta transacción?')) return;
 
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ action: 'delete', id })
-                });
+    let params = new URLSearchParams();
+    params.append('action', 'delete');
+    params.append('id', id);
 
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        });
 
-                const result = await response.json();
-                if (!result.success) {
-                    throw new Error('Error al eliminar la transacción');
-                }
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message);
 
-                await loadTransactions();
-            } catch (error) {
-                console.error('Error al eliminar:', error);
-                alert('Error al eliminar la transacción: ' + error.message);
-            }
-        }
+        await loadTransactions();
+    } catch (error) {
+        alert('Error al eliminar: ' + error.message);
+    }
+}
 
         // Toggle visibilidad
         async function toggleVisibility(id) {
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ action: 'toggle', id })
-                });
+    let params = new URLSearchParams();
+    params.append('action', 'toggle');
+    params.append('id', id);
 
-                if (!response.ok) {
-                    throw new Error('Error en la respuesta del servidor');
-                }
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+        });
 
-                const result = await response.json();
-                if (!result.success) {
-                    throw new Error('Error al cambiar la visibilidad');
-                }
+        const result = await response.json();
+        if (!result.success) throw new Error(result.message);
 
-                await loadTransactions();
-            } catch (error) {
-                console.error('Error al cambiar visibilidad:', error);
-                alert('Error al cambiar la visibilidad: ' + error.message);
-            }
-        }
+        await loadTransactions();
+    } catch (error) {
+        alert('Error al cambiar visibilidad: ' + error.message);
+    }
+}
 
         // Búsqueda
         document.getElementById('searchInput').addEventListener('input', renderTransactions);
@@ -970,4 +955,5 @@
         });
     </script>
 </body>
+
 </html>
